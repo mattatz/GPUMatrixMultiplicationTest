@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5bb5f4cc311968e4ea3f9d294935ea81
+timeCreated: 1531310457
+licenseType: Pro
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - matmul: {fileID: 7200000, guid: d651e2e0c7e94004d87608616def8cff, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

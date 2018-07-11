@@ -1,0 +1,93 @@
+﻿#pragma kernel MatMul
+#pragma kernel MatMulNaive
+
+#define BLOCK_SIZE 16
+#define THREAD [numthreads(BLOCK_SIZE, BLOCK_SIZE, 1)]
+
+StructuredBuffer<float> _A, _B;
+RWStructuredBuffer<float> _C;
+
+int _ARows, _ACols, _BRows, _BCols, _CRows, _CCols;
+
+// http://cseweb.ucsd.edu/classes/wi12/cse260-a/Lectures/Lec08.pdf
+// http://selkie.macalester.edu/csinparallel/modules/GPUProgramming/build/html/CUDA2D/CUDA2D.html
+
+groupshared float As[BLOCK_SIZE][BLOCK_SIZE];
+groupshared float Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+
+THREAD
+void MatMul(
+  uint3 Tid : SV_DispatchThreadID,
+  uint3 Gid : SV_GroupID,
+  uint3 GTid : SV_GroupThreadID
+)
+{
+  int tx = GTid.x;
+  int ty = GTid.y;
+  int bx = Gid.x;
+  int by = Gid.y;
+
+  int x = bx * BLOCK_SIZE + tx;
+  int y = by * BLOCK_SIZE + ty;
+
+  float acc = 0;
+
+  int n = (uint(_ACols - 1) / BLOCK_SIZE) + 1;
+  for (int m = 0; m < n; m++)
+  {
+    int ox = (m * BLOCK_SIZE + tx);
+    if (ox < _ACols && y < _ARows)
+    {
+      As[ty][tx] = _A[y * _ACols + ox];
+    }
+    else
+    {
+      As[ty][tx] = 0;
+    }
+
+    int oy = (m * BLOCK_SIZE + ty);
+    if (oy < _BRows && x < _BCols)
+    {
+      Bs[ty][tx] = _B[oy * _BCols + x];
+    }
+    else
+    {
+      Bs[ty][tx] = 0;
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+    
+    for (int k = 0; k < BLOCK_SIZE; k++)
+    {
+      acc += As[ty][k] * Bs[k][tx];
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+  }
+
+  if (y < _CRows && x < _CCols)
+  {
+    _C[y * _CCols + x] = acc;
+  }
+
+}
+
+
+THREAD
+void MatMulNaive (uint3 id : SV_DispatchThreadID)
+{
+  int x = id.x;
+  int y = id.y;
+
+  if (y >= _CRows || x >= _CCols) return;
+
+  float acc = 0;
+  for (int k = 0; k < _ACols; k++)
+  {
+    acc += _A[y * _ACols + k] * _B[k * _BCols + x];
+  }
+
+  _C[y * _CCols + x] = acc;
+}
+
