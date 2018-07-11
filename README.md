@@ -5,6 +5,7 @@ GPU matrix multiplication in Unity.
 
 ## Usage
 
+```cs
 float[,] A = new float[1024, 512];
 float[,] B = new float[512, 256];
 
@@ -13,7 +14,7 @@ float[,] C = GPUMatrixMultiplication.Multiply(matmul, A, B);
 
 // float[,] C = GPUMatrixMultiplication.Multiply(matmul, A, B, GPUMatrixMultiplicationMethod.SharedMemory); // default
 // float[,] C = GPUMatrixMultiplication.Multiply(matmul, A, B, GPUMatrixMultiplicationMethod.Naive); // naive impl
-
+```
 
 ## Resourses
 
